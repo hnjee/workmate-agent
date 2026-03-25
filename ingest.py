@@ -7,9 +7,9 @@ ingest.py: docs/ 디렉토리의 문서를 임베딩하여 벡터DB에 저장합
 """
 import os
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
-from langchain.schema import Document
+from langchain_core.documents import Document
 from typing import List
 from config import config
 from vectorstore import get_embeddings
@@ -65,7 +65,6 @@ def split_documents(documents: List[Document]) -> List[Document]:
     chunks = splitter.split_documents(documents)
     print(f"총 {len(chunks)}개 청크로 분할 완료")
     return chunks
-
 
 # ── 3. 벡터DB 생성 ────────────────────────────────────────────
 

@@ -9,15 +9,18 @@ main.py: WorkMate Agent 실행 진입점
     2. docs/ 디렉토리에 문서 파일 추가
     3. uv run python ingest.py 실행 (문서 임베딩)
 """
-from langchain.schema import HumanMessage
-from agent import agent_graph
+from langchain_core.messages import HumanMessage
+from src.agent import agent_graph
 from config import config
+from ingest import main as ingest_main
+
+import os
 
 
 def validate_config():
     """필수 환경변수가 설정되었는지 확인합니다."""
-    if not config.ANTHROPIC_API_KEY:
-        print("[에러] ANTHROPIC_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.")
+    if not config.OPENAI_API_KEY:
+        print("[에러] OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.")
         return False
     if not config.TAVILY_API_KEY:
         print("[경고] TAVILY_API_KEY가 설정되지 않았습니다. 웹 검색이 동작하지 않습니다.")
@@ -42,6 +45,10 @@ def run_agent(user_input: str) -> str:
 
 
 def main():
+    if not os.path.exists(config.VECTORSTORE_DIR):
+        print("벡터DB가 없어서 자동으로 문서를 임베딩합니다...")
+        ingest_main()
+
     print("=" * 60)
     print("  WorkMate Agent")
     print("  종료하려면 'quit' 또는 'exit'를 입력하세요.")

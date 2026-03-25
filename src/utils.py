@@ -16,7 +16,7 @@ def get_vectorstore():
 
 # ── 내부 문서 검색 툴 (RAG) ───────────────────────────────────
 
-@tool
+@tool #커스텀 로직 필요
 def search_internal_docs(query: str) -> str:
     """
     내부 업무 문서(마크다운, PDF)에서 관련 내용을 검색합니다.
@@ -62,7 +62,7 @@ def get_tavily_client():
     return _tavily_client
 
 
-@tool
+@tool #결과 포맷팅 제어를 위해 
 def search_web(query: str) -> str:
     """
     인터넷에서 최신 정보를 검색합니다.

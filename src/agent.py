@@ -1,16 +1,17 @@
 from langchain_openai import ChatOpenAI
-from langchain.messages import SystemMessage
-from langgraph.graph import StateGraph, END
+from langchain_core.messages import SystemMessage
+from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from config import config
-from utils import TOOLS
+from .utils import TOOLS
+from .state import AgentState
+from langgraph.prebuilt import tools_condition
 
 
 # ── LLM 초기화 ────────────────────────────────────────────────
 
-llm = ChatAnthropic(
-    model=config.MODEL_NAME,
-    anthropic_api_key=config.ANTHROPIC_API_KEY,
+llm = ChatOpenAI(
+    model=config.MODEL_NAME
 ).bind_tools(TOOLS)
 
 tool_node = ToolNode(TOOLS)
@@ -46,19 +47,6 @@ def agent_node(state: AgentState) -> AgentState:
     return {"messages": [response]}
 
 
-def should_continue(state: AgentState) -> str:
-    """
-    도구를 더 사용할지, 최종 답변을 낼지 판단합니다.
-    - tool_calls 있음 → "tools" (도구 실행)
-    - tool_calls 없음 → "end" (최종 답변)
-    """
-    last_message = state["messages"][-1]
-
-    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
-        return "tools"
-    return "end"
-
-
 # ── Graph ─────────────────────────────────────────────────────
 
 def build_graph():
@@ -72,21 +60,15 @@ def build_graph():
     """
     graph = StateGraph(AgentState)
 
+
     graph.add_node("agent", agent_node)
     graph.add_node("tools", tool_node)
 
-    graph.set_entry_point("agent")
-
+    graph.add_edge(START, "agent")
     graph.add_conditional_edges(
         "agent",
-        should_continue,
-        {
-            "tools": "tools",
-            "end": END,
-        }
+        tools_condition
     )
-
-    # tools 실행 후 항상 agent로 복귀 (루프)
     graph.add_edge("tools", "agent")
 
     return graph.compile()
